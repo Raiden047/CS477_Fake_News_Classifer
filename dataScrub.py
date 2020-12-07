@@ -117,17 +117,14 @@ def plotWordCloud(data_set):
     plt.imshow(wc , interpolation = 'bilinear')
     plt.show()
 
-def create_embedding_matrix(filepath, word_index, embedding_dim):
-    vocab_size = len(word_index) + 1  # Adding again 1 because of reserved 0 index
-    embedding_matrix = np.zeros((vocab_size, embedding_dim))
-
-    with open(filepath, encoding="utf8") as f:
-        for line in f:
-            word, *vector = line.split()
-            if word in word_index:
-                idx = word_index[word] 
-                embedding_matrix[idx] = np.array(
-                    vector, dtype=np.float64)[:embedding_dim]
-
-    return embedding_matrix
+# Function to create weight matrix from word2vec gensim model
+def get_weight_matrix(model, vocab, EMBEDDING_DIM):
+    # total vocabulary size plus 0 for unknown words
+    vocab_size = len(vocab) + 1
+    # define weight matrix dimensions with all 0
+    weight_matrix = np.zeros((vocab_size, EMBEDDING_DIM))
+    # step vocab, store vectors using the Tokenizer's integer mapping
+    for word, i in vocab.items():
+        weight_matrix[i] = model[word]
+    return weight_matrix
 
