@@ -23,23 +23,24 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
 
 # extarcts the dataset from the files
-def getData(fake_file, true_file):
-    fake_set = pd.read_csv(fake_file)
-    true_set = pd.read_csv(true_file)
+def getData(data_file):
+    data_set = pd.read_csv(data_file)
 
-    print('Fake data Set Shape: ',fake_set.shape)
-    print('True Set Shape: ',true_set.shape)
+    print('Data Set Shape: ', data_set.shape)
 
-    return fake_set, true_set
+    return data_set
 
+import string
 # preping text cleaning
 toktok = ToktokTokenizer()
 stop_Words = set(stopwords.words("english"))
 porter = PorterStemmer()
 #sno = SnowballStemmer('english')
 lem = WordNetLemmatizer()
-
 def scrubData(text):
+    # remove numbers
+    text = re.sub(r'\d+', '', text) 
+
     # remove html
     text = BeautifulSoup(text, "html.parser").get_text()
 
@@ -49,11 +50,15 @@ def scrubData(text):
     # Removing URL's
     text = re.sub(r'http\S+', '', text)
 
+    # remove punctuation 
+    translator = str.maketrans('', '', string.punctuation) 
+    text.translate(translator) 
+
     # split string into word tokens and lowercase
     word_tokens = toktok.tokenize(text)
     words = [word for word in word_tokens if word.isalpha()]
     words = [token.lower() for token in words]
-    
+
     # remove stopwords
     words = [w for w in words if not w in stop_Words]
 
@@ -62,7 +67,7 @@ def scrubData(text):
     #words = [sno.stem(word) for word in words]
     
     # lemmatizing each token word
-    #words = [lem.lemmatize(word) for word in words]
+    words = [lem.lemmatize(word) for word in words]
 
     # Join back all the word tokens into one string 
     text_review = ''
@@ -105,5 +110,24 @@ def data_info(training_set):
     # Number of unique classes in each object column
     print(training_set.select_dtypes('object').apply(pd.Series.nunique))
 
+def plotWordCloud(data_set):
+    from wordcloud import WordCloud, STOPWORDS
+    plt.figure(figsize = (20,20)) # Text that is not Fake
+    wc = WordCloud(max_words = 2000 , width = 1600 , height = 800 , stopwords = STOPWORDS).generate(" ".join(data_set[data_set.isReal == 0].text))
+    plt.imshow(wc , interpolation = 'bilinear')
+    plt.show()
 
+def create_embedding_matrix(filepath, word_index, embedding_dim):
+    vocab_size = len(word_index) + 1  # Adding again 1 because of reserved 0 index
+    embedding_matrix = np.zeros((vocab_size, embedding_dim))
+
+    with open(filepath, encoding="utf8") as f:
+        for line in f:
+            word, *vector = line.split()
+            if word in word_index:
+                idx = word_index[word] 
+                embedding_matrix[idx] = np.array(
+                    vector, dtype=np.float64)[:embedding_dim]
+
+    return embedding_matrix
 
