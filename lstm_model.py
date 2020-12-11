@@ -15,7 +15,7 @@ X_train, X_test, y_train, y_test = train_test_split(data_train, data_labels, tes
 
 
 max_features = 1000
-maxlen = 300
+maxlen = 500
 
 start = time.time()
 tokenizer = text.Tokenizer(num_words=max_features)
@@ -55,12 +55,12 @@ print('glove emmbed time: ', round(time.time() - start, 2), 's')
 #print(embedding_matrix[0])
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten, Embedding, Input, LSTM, Conv1D, MaxPool1D, Bidirectional
+from tensorflow.keras.layers import Dense, Flatten, Embedding, Input, LSTM, Conv1D, MaxPool1D, Bidirectional, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 
-batch_size = 256
-epochs = 20
+batch_size = 64
+epochs = 10
 embed_size = 100
 
 learning_rate_reduction = ReduceLROnPlateau(monitor='val_loss', patience = 2, verbose=1, factor=0.5, min_lr=0.00001)
@@ -69,16 +69,36 @@ learning_rate_reduction = ReduceLROnPlateau(monitor='val_loss', patience = 2, ve
 model = Sequential() 
 
 model.add(Embedding(max_features, output_dim=embed_size, weights=[embedding_matrix], input_length=maxlen, trainable=False)) #Embedding Layer
+model.add(Dropout(0.3))
+model.add(LSTM(128))
+model.add(Dense(1, activation = 'sigmoid')) # binary classification
 
-model.add(Bidirectional(LSTM(128))) #Bi-directional LSTM
-
-#Dense layer
-model.add(Dense(128, activation = 'relu'))
-model.add(Dense(1, activation = 'sigmoid')) # binary classification (0\1)
 model.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics= ['acc'])
 model.summary()
 
-history = model.fit(X_train, y_train, batch_size = batch_size , validation_data = (X_test, y_test) , epochs = epochs , callbacks = [learning_rate_reduction])
+history = model.fit(X_train, y_train, batch_size = batch_size , validation_data = (X_test, y_test) , epochs = epochs)
 
 print("Accuracy of the model on Training Data is - " , model.evaluate(X_train, y_train)[1]*100 , "%")
 print("Accuracy of the model on Testing Data is - " , model.evaluate(X_test, y_test)[1]*100 , "%")
+
+exit()
+
+import matplotlib.pyplot as plt
+epochs = [i for i in range(10)]
+train_acc = history.history['accuracy']
+train_loss = history.history['loss']
+val_acc = history.history['val_accuracy']
+val_loss = history.history['val_loss']
+
+plt.plot(epochs , train_acc , 'go-' , label = 'Training Accuracy')
+plt.plot(epochs , val_acc , 'ro-' , label = 'Testing Accuracy')
+plt.title('Training & Testing Accuracy')
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+
+'''
+model.add(LSTM(units=128 , return_sequences = True , recurrent_dropout = 0.25 , dropout = 0.25))
+model.add(LSTM(units=64 , recurrent_dropout = 0.1 , dropout = 0.1))
+model.add(Dense(units = 32 , activation = 'relu'))
+model.add(Dense(1, activation='sigmoid'))
+'''
