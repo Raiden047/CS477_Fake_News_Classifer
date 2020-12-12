@@ -128,3 +128,28 @@ def get_weight_matrix(model, vocab, EMBEDDING_DIM):
         weight_matrix[i] = model[word]
     return weight_matrix
 
+
+from sklearn.feature_extraction.text import CountVectorizer
+def get_top_text_ngrams(corpus, n, g):
+    vec = CountVectorizer(ngram_range=(g, g)).fit(corpus)
+    bag_of_words = vec.transform(corpus)
+    sum_words = bag_of_words.sum(axis=0) 
+    words_freq = [(word, sum_words[0, idx]) for word, idx in vec.vocabulary_.items()]
+    words_freq =sorted(words_freq, key = lambda x: x[1], reverse=True)
+    return words_freq[:n]
+
+def removeTrump(text):
+    print(text)
+    text = text.replace('trump', '')
+    text = text.replace('said', '')
+    text = text.replace('president', '')
+    text = text.replace('people', '')
+    text = text.replace('one', '')
+    #text = re.sub('trump', '', text) 
+    return text
+
+def removeSaid(text):
+    text = text.replace('said', '')
+    #text = re.sub('trump', '', text) 
+    return text
+

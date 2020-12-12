@@ -14,7 +14,7 @@ data_labels = data_set['isReal'][0:1000].to_numpy()
 X_train, X_test, y_train, y_test = train_test_split(data_train, data_labels, test_size=0.25, random_state=42)
 
 
-max_features = 1000
+max_features = 10
 maxlen = 500
 
 start = time.time()

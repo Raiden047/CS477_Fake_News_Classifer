@@ -40,7 +40,7 @@ X_train = vectorizer.transform(X_train)
 X_test  = vectorizer.transform(X_test)
 print('Count Vec time: ', round(time.time() - start, 2), 's')
 
-DTC = tree.DecisionTreeClassifier(max_features=1000)
+DTC = tree.DecisionTreeClassifier(max_features=10)
 from sklearn.model_selection import cross_val_score
 scores = cross_val_score(DTC, X_train, y_train, cv=5)
 print(scores.mean())
